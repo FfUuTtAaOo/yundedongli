@@ -1,0 +1,13 @@
+../Drivers/CMSIS/Include/core_cm4.h:1684:22:__NVIC_EnableIRQ	16	static,ignoring_inline_asm
+../Drivers/CMSIS/Include/core_cm4.h:1722:22:__NVIC_DisableIRQ	16	static,ignoring_inline_asm
+../Core/Ethercat/port/el9800hw.c:241:13:GetInterruptRegister	8	static,ignoring_inline_asm
+../Core/Ethercat/port/el9800hw.c:263:13:ISR_GetInterruptRegister	8	static
+../Core/Ethercat/port/el9800hw.c:280:7:ethercat_hw_init	16	static,ignoring_inline_asm
+../Core/Ethercat/port/el9800hw.c:360:6:HW_Release	4	static
+../Core/Ethercat/port/el9800hw.c:371:8:HW_GetALEventRegister	8	static
+../Core/Ethercat/port/el9800hw.c:389:8:HW_GetALEventRegister_Isr	8	static
+../Core/Ethercat/port/el9800hw.c:421:6:HW_EscRead	24	static,ignoring_inline_asm
+../Core/Ethercat/port/el9800hw.c:485:7:HW_EscReadIsr	24	static
+../Core/Ethercat/port/el9800hw.c:536:6:HW_EscWrite	24	static,ignoring_inline_asm
+../Core/Ethercat/port/el9800hw.c:597:6:HW_EscWriteIsr	24	static
+../Core/Ethercat/port/el9800hw.c:655:6:HAL_GPIO_EXTI_Callback	16	static

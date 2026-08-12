@@ -1,0 +1,183 @@
+#include "lha7668-8.h"
+
+uint8_t adc_init_count = 0;
+
+lhl_lha7668_ctx_t lha7668_ctx = { 0 };  /* LHA7668B official driver handle */
+lhl_lha7668_ctx_t lha7668_ctx_2 = { };
+
+void LHA7668_Platform_Init(void *handle)
+{
+    lhl_lha7668_ctx_t *dev_ctx = (lhl_lha7668_ctx_t *)handle;
+    dev_ctx->io.cs.port = GPIOA;
+    dev_ctx->io.cs.pin = GPIO_PIN_4;
+}
+
+void LHA7668_Platform_Init_2(void *handle)
+{
+    lhl_lha7668_ctx_t *dev_ctx = (lhl_lha7668_ctx_t *)handle;
+    dev_ctx->io.cs.port = GPIOB; 
+    dev_ctx->io.cs.pin = GPIO_PIN_0;
+}
+
+void LHA7668_Platform_Set(const void *port, const uint32_t pin)
+{
+    HAL_GPIO_WritePin((GPIO_TypeDef *)port, pin, GPIO_PIN_SET);
+}
+
+void LHA7668_Platform_Reset(const void *port, const uint32_t pin)
+{
+    HAL_GPIO_WritePin((GPIO_TypeDef *)port, pin, GPIO_PIN_RESET);
+}
+
+int32_t LHA7668_Platform_ReadWrite(uint8_t *txdata, uint8_t *rxdata, const uint16_t size)
+{
+    HAL_SPI_TransmitReceive(&hspi1, txdata, rxdata, size, 0xFFFF);
+
+    return 0;
+}
+
+uint32_t int_adcData(void)
+{
+    LHL_LHA7668_Start(&lha7668_ctx, LHA7668_MODE_SINGLE_SHOT);
+    while (LHL_LHA7668_Get_Flag(&lha7668_ctx, LHA7668_STATUS_RDY_FLAG) == LHA7668_SET);
+    LHL_LHA7668_Get_Data(&lha7668_ctx);
+    return lha7668_ctx.data;
+}
+
+uint32_t int_adcData_2(void)
+{
+    LHL_LHA7668_Start(&lha7668_ctx_2, LHA7668_MODE_SINGLE_SHOT);
+    while (LHL_LHA7668_Get_Flag(&lha7668_ctx_2, LHA7668_STATUS_RDY_FLAG) == LHA7668_SET);
+    LHL_LHA7668_Get_Data(&lha7668_ctx_2);
+    return lha7668_ctx_2.data;
+}
+
+float adcData(void)
+{
+    LHL_LHA7668_Start(&lha7668_ctx, LHA7668_MODE_SINGLE_SHOT);
+    while (LHL_LHA7668_Get_Flag(&lha7668_ctx, LHA7668_STATUS_RDY_FLAG) == LHA7668_SET);
+    LHL_LHA7668_Get_Data(&lha7668_ctx);
+    return LHL_LHA7668_Get_mVoltage(lha7668_ctx.data, LHA7668_BIPOLAR, LHA7668_PGA_X128, 2500);
+}
+
+float adcData_2(void)
+{
+    LHL_LHA7668_Start(&lha7668_ctx_2, LHA7668_MODE_SINGLE_SHOT);
+    while (LHL_LHA7668_Get_Flag(&lha7668_ctx_2, LHA7668_STATUS_RDY_FLAG) == LHA7668_SET);
+    LHL_LHA7668_Get_Data(&lha7668_ctx_2);
+    return LHL_LHA7668_Get_mVoltage(lha7668_ctx_2.data, LHA7668_BIPOLAR, LHA7668_PGA_X128, 2500);
+}
+
+void lha7668_init(uint8_t rate)
+{
+    LHA7668_Platform_Init(&lha7668_ctx);
+    LHL_LHA7668_Init(&lha7668_ctx);
+    LHL_LHA7668_Reset(&lha7668_ctx);
+
+    LHA7668_Platform_Init_2(&lha7668_ctx_2);
+    LHL_LHA7668_Init_2(&lha7668_ctx_2);
+    LHL_LHA7668_Reset(&lha7668_ctx_2);
+
+    uint8_t whoamI = 0xFF;
+    adc_init_count = 0;
+    while (1) {
+        whoamI = LHL_LHA7668_Get_ID(&lha7668_ctx);
+        if (whoamI == LHA7668B_8) {
+            break;
+        } else {
+            adc_init_count++;
+            uart_debug("ADC_1 Init Failed\r\n");
+            original_send(&adc_init_count, 1);
+        }
+    }
+    LHL_LHA7668_Stop(&lha7668_ctx);
+
+    lha7668_ctx.CHANNEL.ENABLE = LHA7668_ENABLE;
+    lha7668_ctx.CHANNEL.SETUP = LHA7668_SETUP_0;
+    lha7668_ctx.CHANNEL.AINP = LHA7668_AIN0;
+    lha7668_ctx.CHANNEL.AINM = LHA7668_AIN1;
+    LHL_LHA7668_Set_Channel(&lha7668_ctx, LHA7668_CHANNEL_0);
+    lha7668_ctx.CHANNEL.ENABLE = LHA7668_ENABLE;
+    lha7668_ctx.CHANNEL.SETUP = LHA7668_SETUP_0;
+    lha7668_ctx.CHANNEL.AINP = LHA7668_AIN4;
+    lha7668_ctx.CHANNEL.AINM = LHA7668_AIN5;
+    LHL_LHA7668_Set_Channel(&lha7668_ctx, LHA7668_CHANNEL_1);
+    lha7668_ctx.CHANNEL.ENABLE = LHA7668_ENABLE;
+    lha7668_ctx.CHANNEL.SETUP = LHA7668_SETUP_0;
+    lha7668_ctx.CHANNEL.AINP = LHA7668_AIN10;
+    lha7668_ctx.CHANNEL.AINM = LHA7668_AIN11;
+    LHL_LHA7668_Set_Channel(&lha7668_ctx, LHA7668_CHANNEL_2);
+
+    lha7668_ctx.SETUP.BIPOLAR = LHA7668_BIPOLAR;
+    lha7668_ctx.SETUP.AIN_BUFP = LHA7668_ENABLE;
+    lha7668_ctx.SETUP.AIN_BUFM = LHA7668_ENABLE;
+    lha7668_ctx.SETUP.REF_SEL = LHA7668_REF_REFIN1;
+    lha7668_ctx.SETUP.REF_BUFP = LHA7668_DISABLE;
+    lha7668_ctx.SETUP.REF_BUFM = LHA7668_DISABLE;
+    lha7668_ctx.SETUP.PGA = LHA7668_PGA_X128;
+    lha7668_ctx.SETUP.FILTER = LHA7668_FILTER_SINC3;
+    lha7668_ctx.SETUP.FS = rate;
+    LHL_LHA7668_Set_Setup(&lha7668_ctx, LHA7668_SETUP_0);
+    LHL_LHA7668_Set_Setup(&lha7668_ctx, LHA7668_SETUP_1);
+    LHL_LHA7668_Set_Setup(&lha7668_ctx, LHA7668_SETUP_2);
+    lha7668_ctx.ADC_CTRL.POWER_MODE = LHA7668_FULL_POWER;
+    lha7668_ctx.ADC_CTRL.CLK_SEL = LHA7668_CLK_INTL;
+    lha7668_ctx.ADC_CTRL.DATA_STATUS = LHA7668_ENABLE;
+    lha7668_ctx.ADC_CTRL.CS_EN = LHA7668_DISABLE;
+    lha7668_ctx.ADC_CTRL.DOUT_RDY_DEL = LHA7668_DISABLE;
+    LHL_LHA7668_Set_ADC(&lha7668_ctx);
+
+    uart_debug("ADC_1 completed init OK\r\n");
+
+
+
+    whoamI = 0xFF;
+    adc_init_count = 0;
+    while (1) {
+        whoamI = LHL_LHA7668_Get_ID(&lha7668_ctx_2);
+        if (whoamI == LHA7668B_8) {
+            break;
+        } else {
+            adc_init_count++;
+            uart_debug("ADC_2 Init Failed\r\n");
+            original_send(&adc_init_count, 1);
+        }
+    }
+    LHL_LHA7668_Stop(&lha7668_ctx_2);
+    lha7668_ctx_2.CHANNEL.ENABLE = LHA7668_ENABLE;
+    lha7668_ctx_2.CHANNEL.SETUP = LHA7668_SETUP_0;
+    lha7668_ctx_2.CHANNEL.AINP = LHA7668_AIN0;
+    lha7668_ctx_2.CHANNEL.AINM = LHA7668_AIN1;
+    LHL_LHA7668_Set_Channel(&lha7668_ctx_2, LHA7668_CHANNEL_0);
+    lha7668_ctx_2.CHANNEL.ENABLE = LHA7668_ENABLE;
+    lha7668_ctx_2.CHANNEL.SETUP = LHA7668_SETUP_0;
+    lha7668_ctx_2.CHANNEL.AINP = LHA7668_AIN4;
+    lha7668_ctx_2.CHANNEL.AINM = LHA7668_AIN5;
+    LHL_LHA7668_Set_Channel(&lha7668_ctx_2, LHA7668_CHANNEL_1);
+    lha7668_ctx_2.CHANNEL.ENABLE = LHA7668_ENABLE;
+    lha7668_ctx_2.CHANNEL.SETUP = LHA7668_SETUP_0;
+    lha7668_ctx_2.CHANNEL.AINP = LHA7668_AIN10;
+    lha7668_ctx_2.CHANNEL.AINM = LHA7668_AIN11;
+    LHL_LHA7668_Set_Channel(&lha7668_ctx_2, LHA7668_CHANNEL_2);
+
+    lha7668_ctx_2.SETUP.BIPOLAR = LHA7668_BIPOLAR;
+    lha7668_ctx_2.SETUP.AIN_BUFP = LHA7668_ENABLE;
+    lha7668_ctx_2.SETUP.AIN_BUFM = LHA7668_ENABLE;
+    lha7668_ctx_2.SETUP.REF_SEL = LHA7668_REF_REFIN1;
+    lha7668_ctx_2.SETUP.REF_BUFP = LHA7668_DISABLE;
+    lha7668_ctx_2.SETUP.REF_BUFM = LHA7668_DISABLE;
+    lha7668_ctx_2.SETUP.PGA = LHA7668_PGA_X128;
+    lha7668_ctx_2.SETUP.FILTER = LHA7668_FILTER_SINC3;
+    lha7668_ctx_2.SETUP.FS = rate;
+    LHL_LHA7668_Set_Setup(&lha7668_ctx_2, LHA7668_SETUP_0);
+    LHL_LHA7668_Set_Setup(&lha7668_ctx_2, LHA7668_SETUP_1);
+    LHL_LHA7668_Set_Setup(&lha7668_ctx_2, LHA7668_SETUP_2);
+    lha7668_ctx_2.ADC_CTRL.POWER_MODE = LHA7668_FULL_POWER;
+    lha7668_ctx_2.ADC_CTRL.CLK_SEL = LHA7668_CLK_INTL;
+    lha7668_ctx_2.ADC_CTRL.DATA_STATUS = LHA7668_ENABLE;
+    lha7668_ctx_2.ADC_CTRL.CS_EN = LHA7668_DISABLE;
+    lha7668_ctx_2.ADC_CTRL.DOUT_RDY_DEL = LHA7668_DISABLE;
+    LHL_LHA7668_Set_ADC(&lha7668_ctx_2);
+
+    uart_debug("ADC_2 completed init OK\r\n");
+}

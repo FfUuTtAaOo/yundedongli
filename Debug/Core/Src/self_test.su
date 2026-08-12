@@ -1,0 +1,13 @@
+../Core/Src/self_test.c:20:12:is_all_zeros	24	static
+../Core/Src/self_test.c:31:12:has_valid_float	32	static
+../Core/Src/self_test.c:55:10:self_test_adc	24	static
+../Core/Src/self_test.c:98:10:self_test_rs485	16	static
+../Core/Src/self_test.c:136:10:self_test_flash	4	static
+../Core/Src/self_test.c:213:10:self_test_run_all	16	static
+../Core/Src/self_test.c:231:13:uart_puts	16	static
+../Core/Src/self_test.c:238:13:uart_put_hex8	24	static
+../Core/Src/self_test.c:249:13:uart_put_dec	48	static
+../Core/Src/self_test.c:270:13:uart_put_ip	24	static
+../Core/Src/self_test.c:278:13:uart_print_result	24	static
+../Core/Src/self_test.c:285:13:uart_print_ok_fail	24	static
+../Core/Src/self_test.c:294:6:self_test_print_report	24	static

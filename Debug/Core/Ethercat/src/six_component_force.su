@@ -1,0 +1,11 @@
+../Core/Ethercat/src/six_component_force.c:62:9:APPL_AckErrorInd	16	static
+../Core/Ethercat/src/six_component_force.c:81:8:APPL_StartMailboxHandler	4	static
+../Core/Ethercat/src/six_component_force.c:97:8:APPL_StopMailboxHandler	4	static
+../Core/Ethercat/src/six_component_force.c:118:8:APPL_StartInputHandler	16	static
+../Core/Ethercat/src/six_component_force.c:134:8:APPL_StopInputHandler	4	static
+../Core/Ethercat/src/six_component_force.c:152:8:APPL_StartOutputHandler	4	static
+../Core/Ethercat/src/six_component_force.c:168:8:APPL_StopOutputHandler	4	static
+../Core/Ethercat/src/six_component_force.c:182:8:APPL_GenerateMapping	48	static
+../Core/Ethercat/src/six_component_force.c:272:6:APPL_InputMapping	24	static
+../Core/Ethercat/src/six_component_force.c:306:6:APPL_OutputMapping	24	static
+../Core/Ethercat/src/six_component_force.c:327:6:APPL_Application	24	static

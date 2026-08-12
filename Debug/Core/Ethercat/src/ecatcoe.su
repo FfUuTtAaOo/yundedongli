@@ -1,0 +1,3 @@
+../Core/Ethercat/src/ecatcoe.c:87:6:COE_Init	4	static
+../Core/Ethercat/src/ecatcoe.c:104:7:COE_ServiceInd	24	static
+../Core/Ethercat/src/ecatcoe.c:151:7:COE_ContinueInd	16	static

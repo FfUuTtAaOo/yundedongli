@@ -1,0 +1,9 @@
+../Core/Src/flash_storage.c:12:12:flash_unlock	1
+../Core/Src/flash_storage.c:18:13:flash_lock	1
+../Core/Src/flash_storage.c:26:6:flash_erase_storage	1
+../Core/Src/flash_storage.c:43:12:flash_write_buf	1
+../Core/Src/flash_storage.c:76:17:calc_crc	1
+../Core/Src/flash_storage.c:86:5:flash_load_all	6
+../Core/Src/flash_storage.c:120:5:flash_save_config	1
+../Core/Src/flash_storage.c:146:5:flash_save_matrix	3
+../Core/Src/flash_storage.c:158:5:flash_save_zero	1
