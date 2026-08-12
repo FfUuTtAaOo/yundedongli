@@ -376,9 +376,9 @@ int main(void)
     uint32_t st_rs485 = self_test_rs485();
     uart_debug(st_rs485 == ST_ERR_NONE ? "RS485 OK (USART+DMA)\r\n" : "RS485 FAIL\r\n");
 
-    ethercat_hw_init();
-	MainInit();
-    uart_debug("EtherCAT Init OK\r\n");
+    // ethercat_hw_init();
+	// MainInit();
+    // uart_debug("EtherCAT Init OK\r\n");
 
     HAL_TIM_Base_Start_IT(&htim2);   /* Start 1kHz timer */
 
