@@ -1,7 +1,0 @@
-../Core/Ethercat/src/sdoserv.c:211:14:SdoDownloadSegmentInd	48	static
-../Core/Ethercat/src/sdoserv.c:411:14:SdoUploadSegmentInd	40	static
-../Core/Ethercat/src/sdoserv.c:535:6:SdoRes	24	static
-../Core/Ethercat/src/sdoserv.c:624:7:SDOS_SdoInd	80	static
-../Core/Ethercat/src/sdoserv.c:1001:6:SDOS_SdoRes	48	static
-../Core/Ethercat/src/sdoserv.c:1061:7:SDOS_ClearPendingResponse	8	static
-../Core/Ethercat/src/sdoserv.c:1100:7:SDOS_SdoInfoInd	72	static

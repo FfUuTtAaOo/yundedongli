@@ -141,10 +141,10 @@ extern 	uint16_t adcx;
 -----------------------------------------------*/
 
 #ifndef DISABLE_ESC_INT
-#define    DISABLE_ESC_INT()           NVIC_DisableIRQ(EXTI0_IRQn)		// {(_INT1IE)=0;} /**< \brief Disable interrupt source INT1*/
+#define    DISABLE_ESC_INT()           NVIC_DisableIRQ(EXTI15_10_IRQn)		// IRQ=PA10(EXTI10), 属于 EXTI15_10_IRQn; {(_INT1IE)=0;} /**< \brief Disable interrupt source INT1*/
 #endif
 #ifndef ENABLE_ESC_INT
-#define    ENABLE_ESC_INT()           HAL_NVIC_EnableIRQ(EXTI0_IRQn); //NVIC_EnableIRQ(EXTI0_IRQn)			// {(_INT1IE)=1;} /**< \brief Enable interrupt source INT1*/
+#define    ENABLE_ESC_INT()           HAL_NVIC_EnableIRQ(EXTI15_10_IRQn); // IRQ=PA10(EXTI10); NVIC_EnableIRQ(EXTI15_10_IRQn)			// {(_INT1IE)=1;} /**< \brief Enable interrupt source INT1*/
 #endif
 
 #ifndef HW_GetTimer

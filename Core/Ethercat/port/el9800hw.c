@@ -143,7 +143,7 @@ extern TIM_HandleTypeDef htim2;
 	#define Sync0Isr                EXTI1_IRQHandler
 	#define DISABLE_SYNC0_INT		NVIC_DisableIRQ(EXTI9_5_IRQn);
 	#define ENABLE_SYNC0_INT		NVIC_EnableIRQ(EXTI9_5_IRQn);
-	#define IS_SYNC0_INT_ACTIVE		((GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_9)) == 0)
+	#define IS_SYNC0_INT_ACTIVE		((HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_9)) == GPIO_PIN_RESET)
 
 	/*ECATCHANGE_START(V5.10) HW3*/
 
@@ -151,7 +151,7 @@ extern TIM_HandleTypeDef htim2;
 	#define    Sync1Isr                        		EXTI2_IRQHandler
 	#define    DISABLE_SYNC1_INT                 NVIC_DisableIRQ(EXTI9_5_IRQn);
 	#define    ENABLE_SYNC1_INT                 HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);//NVIC_EnableIRQ(EXTI2_IRQn);
-	#define    IS_SYNC1_INT_ACTIVE              ((GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_8)) == 0)
+	#define    IS_SYNC1_INT_ACTIVE              ((HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_8)) == GPIO_PIN_RESET)
 	/*ECATCHANGE_END(V5.10) HW3*/
 #endif //#if DC_SUPPORTED && _STM32_IO8
 
@@ -281,11 +281,23 @@ UINT8 ethercat_hw_init(void)
 {
 	UINT16 intMask;
 	UINT32 data;
+	UINT16 retry;
 
+    HAL_Delay(1000);
+
+	/* 字节序寄存器校验：FCE1353 读回应为 0x87654321。
+	   加超时保护，避免 SPI 异常时死循环 */
+	retry = 0;
 	do
 	{
 		data = SPIReadDWord(FCE135x_BYTE_ORDER_REG);
-	} while (0x87654321 != data);
+		retry++;
+	} while ((data != 0x87654321) && (retry < 100));
+
+	if (data != 0x87654321)
+	{
+		return 1;   /* 字节序校验失败 */
+	}
 
 	data = 0x00000000;
 	SPIWriteDWord(FCE135x_CSR_INT_EN, data);
@@ -654,13 +666,13 @@ void HW_EscWriteIsr( MEM_ADDR *pData, UINT16 Address, UINT16 Len )
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-	if (GPIO_Pin == GPIO_PIN_0) {
+	if (GPIO_Pin == GPIO_PIN_10) {
 		PDI_Isr();
-	} else if (GPIO_Pin == GPIO_PIN_1) {
+	} else if (GPIO_Pin == GPIO_PIN_9) {
 		DISABLE_ESC_INT();
 		Sync0_Isr();
 		ENABLE_ESC_INT();
-	} else if (GPIO_Pin == GPIO_PIN_2) {
+	} else if (GPIO_Pin == GPIO_PIN_8) {
 		DISABLE_ESC_INT();
 		Sync1_Isr();
 		ENABLE_ESC_INT();

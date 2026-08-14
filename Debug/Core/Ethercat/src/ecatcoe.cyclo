@@ -1,3 +1,0 @@
-../Core/Ethercat/src/ecatcoe.c:87:6:COE_Init	1
-../Core/Ethercat/src/ecatcoe.c:104:7:COE_ServiceInd	4
-../Core/Ethercat/src/ecatcoe.c:151:7:COE_ContinueInd	4

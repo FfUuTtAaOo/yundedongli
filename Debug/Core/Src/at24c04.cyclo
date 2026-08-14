@@ -1,3 +1,0 @@
-../Core/Src/at24c04.c:11:10:at24c04_getdevaddr	1
-../Core/Src/at24c04.c:24:19:at24c04_write	3
-../Core/Src/at24c04.c:68:19:at24c04_read	1

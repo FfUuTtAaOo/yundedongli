@@ -880,11 +880,12 @@ UINT16 COE_ObjDictionaryInit(void)
     {
         return result;
     }
-    
-    // if(ApplicationObjDic != NULL)
-    // {
-    //     result = AddObjectsToObjDictionary((TOBJECT OBJMEM *) ApplicationObjDic);
-    // }
+
+    /* Register application specific object dictionary (six-component force:
+       0x1600/0x1A00/0x1C12/0x1C13/0x6000/0x7000/0xF000).
+       Without this the slave has no output PDO mapping objects and the master
+       gets AL Status 0x0025 "Invalid output mapping" during PREOP -> SAFEOP. */
+    result = AddObjectsToObjDictionary((TOBJECT OBJMEM *) ApplicationObjDic);
 
 
 

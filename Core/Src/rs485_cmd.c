@@ -4,8 +4,10 @@
 #include "calibration.h"
 #include "flash_storage.h"
 #include <string.h>
+#include "tim.h"
 
 extern uint8_t output_interface;
+extern uint8_t ether_flag;
 
 /* ================================================================
  *  Internal helpers
@@ -149,6 +151,22 @@ void rs485_cmd_dispatch(uint8_t cmd, const uint8_t *payload, uint16_t len)
     /* ---- 0x35  Set data format ---- */
     case RS485_CMD_SET_FORMAT_N:
         g_sys.data_format = 2;
+        ack(cmd);
+        break;
+
+    case ETHERCAT_DISABLED:
+        ether_flag = 0;
+        HAL_TIM_Base_Stop_IT(&htim2);
+        HAL_NVIC_DisableIRQ(EXTI9_5_IRQn);
+        HAL_NVIC_DisableIRQ(EXTI15_10_IRQn);
+        ack(cmd);
+        break;
+
+    case ETHERCAT_ENABLED:
+        ether_flag = 1;
+        HAL_TIM_Base_Start_IT(&htim2);
+        HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+        HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
         ack(cmd);
         break;
 

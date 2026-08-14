@@ -186,15 +186,25 @@ uint32_t SPIReadDWord (uint16_t Address)
 {
 	UINT32_VAL dwResult;
 	UINT16_VAL wAddr;
+	UINT8 i;
 
 	wAddr.Val  = Address;
 	//Assert CS line
 	CSLOW();
 	//Write Command
-	SPIWriteByte(CMD_SERIAL_READ);
+	/* FCE1353 必须使用 FAST READ(0x0B)+dummy 才能读回数据，
+	   普通读(0x03)在本芯片上读不到有效数据（与 LAN9252 的差异）。
+	   dummy 数量见 CMD_FAST_READ_DUMMY（FCE1353 需要 3 个，LAN9252 只需 1 个） */
+	SPIWriteByte(CMD_FAST_READ);
 	//Write Address
 	SPIWriteByte(wAddr.byte.HB);
 	SPIWriteByte(wAddr.byte.LB);
+
+	//FAST READ 需要 dummy 周期，dummy 期间 MISO 保持高电平(0xFF)
+	for (i = 0; i < CMD_FAST_READ_DUMMY; i++)
+	{
+		SPIWriteByte(0xFF);
+	}
 
 	//Read Bytes
 	dwResult.byte.LB = SPIReadByte();
@@ -211,6 +221,7 @@ uint32_t SPIFastReadDWord (uint16_t Address)
 {
 	UINT32_VAL dwResult;
 	UINT16_VAL wAddr;
+	UINT8 i;
 
 	wAddr.Val  = Address;
 	//Assert CS line
@@ -221,9 +232,11 @@ uint32_t SPIFastReadDWord (uint16_t Address)
 	SPIWriteByte(wAddr.byte.HB);
 	SPIWriteByte(wAddr.byte.LB);
 
-	//Dummy Byte
-	SPIWriteByte(CMD_FAST_READ_DUMMY);
-	SPIReadByte();
+	//FCE1353 需要 CMD_FAST_READ_DUMMY 个 dummy 周期
+	for (i = 0; i < CMD_FAST_READ_DUMMY; i++)
+	{
+		SPIWriteByte(0xFF);
+	}
 	//Read Bytes
 	dwResult.byte.LB = SPIReadByte();
 	dwResult.byte.HB = SPIReadByte();
@@ -482,9 +495,12 @@ void SPIReadPDRamRegister(uint8_t *ReadBuffer, uint16_t Address, uint16_t Count)
     SPIWriteByte(CMD_FAST_READ);
 
     SPISendAddr(PRAM_READ_FIFO_REG);
-    
-    //Dummy Byte
-    SPIWriteByte(CMD_FAST_READ_DUMMY);
+
+    //FCE1353 需要 CMD_FAST_READ_DUMMY 个 dummy 周期
+    for (i = 0; i < CMD_FAST_READ_DUMMY; i++)
+    {
+        SPIWriteByte(0xFF);
+    }
 
     while(Count)
     {
@@ -645,6 +661,7 @@ unsigned long SPIReadDWord_test(unsigned short Address)
 {
 	UINT32_VAL dwResult;
 	UINT16_VAL wAddr;
+	UINT8 i;
 
 	wAddr.Val  = Address;
 	//Assert CS line
@@ -654,17 +671,20 @@ unsigned long SPIReadDWord_test(unsigned short Address)
     //Write Address
 	SPIWriteByte(wAddr.byte.HB);
 	SPIWriteByte(wAddr.byte.LB);
-			
-	//Dummy Byte
-	SPIWriteByte(CMD_FAST_READ_DUMMY);
+
+	//FCE1353 需要 CMD_FAST_READ_DUMMY 个 dummy 周期
+	for (i = 0; i < CMD_FAST_READ_DUMMY; i++)
+	{
+		SPIWriteByte(0xFF);
+	}
     //Read Bytes
     dwResult.byte.LB = SPIReadByte();
     dwResult.byte.HB = SPIReadByte();
     dwResult.byte.UB = SPIReadByte();
     dwResult.byte.MB = SPIReadByte();
     //De-Assert CS line
-		CSHIGH();
-		return dwResult.Val;
+	CSHIGH();
+	return dwResult.Val;
 }
 /*
  * ��    ����FCE1353_ReadID

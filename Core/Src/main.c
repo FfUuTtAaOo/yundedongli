@@ -72,6 +72,7 @@ config_t                 g_config = {
 decouple_matrix_t        g_matrix;
 
 uint8_t output_interface = 0;
+uint8_t ether_flag = 1;
 
 /* USER CODE END PV */
 
@@ -376,19 +377,19 @@ int main(void)
     uint32_t st_rs485 = self_test_rs485();
     uart_debug(st_rs485 == ST_ERR_NONE ? "RS485 OK (USART+DMA)\r\n" : "RS485 FAIL\r\n");
 
-    // ethercat_hw_init();
-	// MainInit();
-    // uart_debug("EtherCAT Init OK\r\n");
+    if (ethercat_hw_init() != 0)
+    {
+        uart_debug("EtherCAT SPI FAILED (BYTE_ORDER 0x64)\r\n");
+    }
+    else
+    {
+        uart_debug("EtherCAT SPI OK\r\n");
+        MainInit();
+        uart_debug("EtherCAT Init OK\r\n");
+    }
 
+    g_sys.data_format = 2;
     HAL_TIM_Base_Start_IT(&htim2);   /* Start 1kHz timer */
-
-    // while (1) {
-    //     RS485_RX;
-    //     HAL_Delay(5000);
-    //     RS485_TX;
-    //     uart_debug("111\r\n");
-    //     HAL_Delay(5000);
-    // }
 
   /* USER CODE END 2 */
 
@@ -396,15 +397,18 @@ int main(void)
   /* USER CODE BEGIN WHILE */
     while (1)
     {
+        if (ether_flag == 1) {
+            MainLoop();
+        }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-        static uint32_t last_beat = 0;
-        /* ---- Heartbeat ---- */
-        if ((g_tick_ms - last_beat) >= 3000) {
-            uart_debug(".\r\n");
-            last_beat = g_tick_ms;
-        }
+        // static uint32_t last_beat = 0;
+        // /* ---- Heartbeat ---- */
+        // if ((g_tick_ms - last_beat) >= 3000) {
+        //     uart_debug(".\r\n");
+        //     last_beat = g_tick_ms;
+        // }
 
         {
             float adc_tmp[ADC_CHANNEL_NUM] = { 0 };

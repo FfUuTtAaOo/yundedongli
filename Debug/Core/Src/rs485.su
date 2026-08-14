@@ -1,9 +1,0 @@
-../Core/Src/rs485.c:16:13:rs485_tx	16	static
-../Core/Src/rs485.c:28:6:rs485_init	16	static
-../Core/Src/rs485.c:49:6:rs485_rx_restart	8	static
-../Core/Src/rs485.c:65:6:rs485_rx_idle_cb	24	static
-../Core/Src/rs485.c:89:6:rs485_process	280	static
-../Core/Src/rs485.c:156:6:rs485_send_frame	280	static
-../Core/Src/rs485.c:177:6:rs485_send_raw	280	static
-../Core/Src/rs485.c:194:6:original_send	16	static
-../Core/Src/rs485.c:199:6:just_float_send_raw	280	static

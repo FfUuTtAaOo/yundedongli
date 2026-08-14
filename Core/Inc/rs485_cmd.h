@@ -28,6 +28,9 @@ extern "C" {
 #define RS485_CMD_SET_FORMAT_KG 0x33  /* Set data format: 0=mV,1=kg,2=N      */
 #define RS485_CMD_SET_FORMAT    0x34  /* Set data format: 0=mV,1=kg,2=N      */
 #define RS485_CMD_SET_FORMAT_N  0x35  /* Set data format: 0=mV,1=kg,2=N      */
+
+#define ETHERCAT_DISABLED       0x40
+#define ETHERCAT_ENABLED        0x41
 #define RS485_CMD_SET_IP        0x0B  /* Set IP address   (4 bytes)          */
 #define RS485_CMD_SET_MAC       0x0C  /* Set MAC address  (6 bytes)          */
 #define RS485_CMD_SET_SUBNET    0x0D  /* Set subnet mask  (4 bytes)          */

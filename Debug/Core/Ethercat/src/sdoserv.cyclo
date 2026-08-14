@@ -1,7 +1,0 @@
-../Core/Ethercat/src/sdoserv.c:211:14:SdoDownloadSegmentInd	19
-../Core/Ethercat/src/sdoserv.c:411:14:SdoUploadSegmentInd	8
-../Core/Ethercat/src/sdoserv.c:535:6:SdoRes	11
-../Core/Ethercat/src/sdoserv.c:624:7:SDOS_SdoInd	44
-../Core/Ethercat/src/sdoserv.c:1001:6:SDOS_SdoRes	8
-../Core/Ethercat/src/sdoserv.c:1061:7:SDOS_ClearPendingResponse	6
-../Core/Ethercat/src/sdoserv.c:1100:7:SDOS_SdoInfoInd	27

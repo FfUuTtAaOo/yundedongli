@@ -1,5 +1,0 @@
-../Core/Src/filter.c:8:6:FloatFilter_Init	3
-../Core/Src/filter.c:22:7:FloatFilter_UpdateChannel	4
-../Core/Src/filter.c:52:6:FloatFilter_UpdateAllChannels	2
-../Core/Src/filter.c:59:7:FloatFilter_GetCurrentAverage	3
-../Core/Src/filter.c:68:6:FloatFilter_ResetChannel	2

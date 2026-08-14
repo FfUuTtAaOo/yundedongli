@@ -73,7 +73,10 @@
 	#define CMD_QUAD_ADDR_DARA_WRITE 0xE2
 
 	#define CMD_SERIAL_READ_DUMMY 0
-	#define CMD_FAST_READ_DUMMY 	4//1
+	/* FCE1353 的 FAST READ 需要 3 个 dummy 字节（LAN9252 只需 1 个）。
+	   实测：dummy 不足时，前几个读周期 MISO 保持高电平，读回 0xFF，
+	   只有凑满 3 个 dummy 后才能读到有效数据 */
+	#define CMD_FAST_READ_DUMMY 	3
 	#define CMD_DUAL_OP_READ_DUMMY 1
 	#define CMD_DUAL_IO_READ_DUMMY 2
 	#define CMD_QUAD_OP_READ_DUMMY 1

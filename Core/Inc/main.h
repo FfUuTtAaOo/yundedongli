@@ -68,10 +68,13 @@ void uart_debug(const char *msg);
 #define SPI2_CS_GPIO_Port GPIOB
 #define SYNC1_Pin GPIO_PIN_8
 #define SYNC1_GPIO_Port GPIOA
+#define SYNC1_EXTI_IRQn EXTI9_5_IRQn
 #define SYNC0_Pin GPIO_PIN_9
 #define SYNC0_GPIO_Port GPIOA
+#define SYNC0_EXTI_IRQn EXTI9_5_IRQn
 #define IRQ_Pin GPIO_PIN_10
 #define IRQ_GPIO_Port GPIOA
+#define IRQ_EXTI_IRQn EXTI15_10_IRQn
 
 /* USER CODE BEGIN Private defines */
 #define RS485_TX    { HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_SET); HAL_Delay(10); }

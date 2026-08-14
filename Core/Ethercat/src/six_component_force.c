@@ -24,6 +24,7 @@
 #include "ecat_def.h"
 
 #include "applInterface.h"
+#include "sensor_types.h"
 
 #define _SIX_COMPONENT_FORCE_ 1
 #include "six_component_force.h"
@@ -319,6 +320,8 @@ void APPL_OutputMapping(UINT16* pData)
   }
 }
 
+extern volatile sensor_data_t   g_sensor;
+
 /////////////////////////////////////////////////////////////////////////////////////////
 /**
 \brief    This function will called from the synchronisation ISR 
@@ -327,7 +330,8 @@ void APPL_OutputMapping(UINT16* pData)
 void APPL_Application(void)
 {
 	for (uint8_t i = 0; i < 6; i++) {
-		tmp[i].f32 = tmp[i].f32 + 0.000001;
+		// tmp[i].f32 = tmp[i].f32 + 0.000001;
+        tmp[i].f32 = g_sensor.force[i];
 	}
 }
 
