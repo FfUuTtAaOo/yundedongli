@@ -58,6 +58,7 @@ void rs485_cmd_dispatch(uint8_t cmd, const uint8_t *payload, uint16_t len)
 
     /* ---- 0x02  Start continuous send ---- */
     case RS485_CMD_START:
+        HAL_TIM_Base_Start_IT(&htim2);
         g_sys.send_mode = 1;
         output_interface = 1;
         ack(cmd);
@@ -113,6 +114,7 @@ void rs485_cmd_dispatch(uint8_t cmd, const uint8_t *payload, uint16_t len)
 
     /* ---- 0x30  Zero calibration (20-point force average) ---- */
     case RS485_CMD_ZERO:
+        HAL_TIM_Base_Start_IT(&htim2);
         calib_zero_start();
         g_sys.zero_calib_busy = 1;
         ack(cmd);
