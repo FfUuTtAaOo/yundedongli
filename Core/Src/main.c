@@ -247,12 +247,16 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         g_tick_ms++;
 
         if (g_tick_ms % 3 == 0) {
-            adc_data_buff[adc_data_int_count][0] = int_adcData();
-            adc_data_buff[adc_data_int_count][1] = int_adcData();
-            adc_data_buff[adc_data_int_count][2] = int_adcData();
-            adc_data_buff[adc_data_int_count][3] = int_adcData_2();
-            adc_data_buff[adc_data_int_count][4] = int_adcData_2();
-            adc_data_buff[adc_data_int_count][5] = int_adcData_2();
+            uint32_t raw;
+            /* 六个通道分别对应 FX FY FZ TX TY TZ。
+               任一通道读取失败(超时)时跳过写入，该通道保留上一次自己的有效值，
+               避免把其他通道(如 FX)的数据错填到 FY/FZ 上 */
+            if (int_adcData(&raw) == 0)   { adc_data_buff[adc_data_int_count][0] = raw; }
+            if (int_adcData(&raw) == 0)   { adc_data_buff[adc_data_int_count][1] = raw; }
+            if (int_adcData(&raw) == 0)   { adc_data_buff[adc_data_int_count][2] = raw; }
+            if (int_adcData_2(&raw) == 0) { adc_data_buff[adc_data_int_count][3] = raw; }
+            if (int_adcData_2(&raw) == 0) { adc_data_buff[adc_data_int_count][4] = raw; }
+            if (int_adcData_2(&raw) == 0) { adc_data_buff[adc_data_int_count][5] = raw; }
             adc_data_int_count++;
             if (adc_data_int_count >= 64) {
                 adc_data_int_count = 0;

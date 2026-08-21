@@ -17,8 +17,8 @@ void LHA7668_Platform_Init(void *handle);
 void LHA7668_Platform_Set(const void *port, const uint32_t pin);
 void LHA7668_Platform_Reset(const void *port, const uint32_t pin);
 int32_t LHA7668_Platform_ReadWrite(uint8_t *txdata, uint8_t *rxdata, const uint16_t size);
-uint32_t int_adcData(void);
-uint32_t int_adcData_2(void);
+int32_t int_adcData(uint32_t *out);
+int32_t int_adcData_2(uint32_t *out);
 float adcData(void);
 void lha7668_init(uint8_t rate);
 

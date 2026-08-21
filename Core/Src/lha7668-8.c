@@ -2,6 +2,10 @@
 
 uint8_t adc_init_count = 0;
 
+/* RDY 轮询超时上限：防止 ADC 未就绪 / SPI 异常时 while 死循环卡死
+   每次轮询约 30us（4 字节 SPI @3MHz），500 次 ≈ 15ms */
+#define LHA7668_RDY_WAIT_MAX   500
+
 lhl_lha7668_ctx_t lha7668_ctx = { 0 };  /* LHA7668B official driver handle */
 lhl_lha7668_ctx_t lha7668_ctx_2 = { };
 
@@ -31,40 +35,65 @@ void LHA7668_Platform_Reset(const void *port, const uint32_t pin)
 
 int32_t LHA7668_Platform_ReadWrite(uint8_t *txdata, uint8_t *rxdata, const uint16_t size)
 {
-    HAL_SPI_TransmitReceive(&hspi1, txdata, rxdata, size, 0xFFFF);
-
+    if (HAL_SPI_TransmitReceive(&hspi1, txdata, rxdata, size, 100) != HAL_OK) {
+        /* SPI 出错（OVR/MODF 等）时中止并复位外设，避免后续传输永久卡在超时上 */
+        HAL_SPI_Abort(&hspi1);
+        return -1;
+    }
     return 0;
 }
 
-uint32_t int_adcData(void)
+/* 返回 0=读取成功(*out 为最新转换值)；非 0=转换超时/SPI 异常(*out 不更新，
+   调用方应保留该通道上一次有效值，避免共用同一个 ctx 导致通道间数据错位) */
+int32_t int_adcData(uint32_t *out)
 {
+    uint32_t wait = LHA7668_RDY_WAIT_MAX;
     LHL_LHA7668_Start(&lha7668_ctx, LHA7668_MODE_SINGLE_SHOT);
-    while (LHL_LHA7668_Get_Flag(&lha7668_ctx, LHA7668_STATUS_RDY_FLAG) == LHA7668_SET);
+    while ((LHL_LHA7668_Get_Flag(&lha7668_ctx, LHA7668_STATUS_RDY_FLAG) == LHA7668_SET) && (--wait));
+    if (!wait) {   /* 转换未完成/SPI 异常，不更新 *out */
+        return -1;
+    }
     LHL_LHA7668_Get_Data(&lha7668_ctx);
-    return lha7668_ctx.data;
+    if (out) {
+        *out = lha7668_ctx.data;
+    }
+    return 0;
 }
 
-uint32_t int_adcData_2(void)
+int32_t int_adcData_2(uint32_t *out)
 {
+    uint32_t wait = LHA7668_RDY_WAIT_MAX;
     LHL_LHA7668_Start(&lha7668_ctx_2, LHA7668_MODE_SINGLE_SHOT);
-    while (LHL_LHA7668_Get_Flag(&lha7668_ctx_2, LHA7668_STATUS_RDY_FLAG) == LHA7668_SET);
+    while ((LHL_LHA7668_Get_Flag(&lha7668_ctx_2, LHA7668_STATUS_RDY_FLAG) == LHA7668_SET) && (--wait));
+    if (!wait) {
+        return -1;
+    }
     LHL_LHA7668_Get_Data(&lha7668_ctx_2);
-    return lha7668_ctx_2.data;
+    if (out) {
+        *out = lha7668_ctx_2.data;
+    }
+    return 0;
 }
 
 float adcData(void)
 {
+    uint32_t wait = LHA7668_RDY_WAIT_MAX;
     LHL_LHA7668_Start(&lha7668_ctx, LHA7668_MODE_SINGLE_SHOT);
-    while (LHL_LHA7668_Get_Flag(&lha7668_ctx, LHA7668_STATUS_RDY_FLAG) == LHA7668_SET);
-    LHL_LHA7668_Get_Data(&lha7668_ctx);
+    while ((LHL_LHA7668_Get_Flag(&lha7668_ctx, LHA7668_STATUS_RDY_FLAG) == LHA7668_SET) && (--wait));
+    if (wait) {
+        LHL_LHA7668_Get_Data(&lha7668_ctx);
+    }
     return LHL_LHA7668_Get_mVoltage(lha7668_ctx.data, LHA7668_BIPOLAR, LHA7668_PGA_X128, 2500);
 }
 
 float adcData_2(void)
 {
+    uint32_t wait = LHA7668_RDY_WAIT_MAX;
     LHL_LHA7668_Start(&lha7668_ctx_2, LHA7668_MODE_SINGLE_SHOT);
-    while (LHL_LHA7668_Get_Flag(&lha7668_ctx_2, LHA7668_STATUS_RDY_FLAG) == LHA7668_SET);
-    LHL_LHA7668_Get_Data(&lha7668_ctx_2);
+    while ((LHL_LHA7668_Get_Flag(&lha7668_ctx_2, LHA7668_STATUS_RDY_FLAG) == LHA7668_SET) && (--wait));
+    if (wait) {
+        LHL_LHA7668_Get_Data(&lha7668_ctx_2);
+    }
     return LHL_LHA7668_Get_mVoltage(lha7668_ctx_2.data, LHA7668_BIPOLAR, LHA7668_PGA_X128, 2500);
 }
 
