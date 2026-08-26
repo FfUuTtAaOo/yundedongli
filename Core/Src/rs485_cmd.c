@@ -5,6 +5,7 @@
 #include "flash_storage.h"
 #include <string.h>
 #include "tim.h"
+#include "filter.h"
 
 extern uint8_t output_interface;
 extern uint8_t ether_flag;
@@ -141,18 +142,21 @@ void rs485_cmd_dispatch(uint8_t cmd, const uint8_t *payload, uint16_t len)
     /* ---- 0x34  Set data format ---- */
     case RS485_CMD_SET_FORMAT:
         g_sys.data_format = 0;
+        FloatFilter_Init();
         ack(cmd);
         break;
 
     /* ---- 0x33  Set data format ---- */
     case RS485_CMD_SET_FORMAT_KG:
         g_sys.data_format = 1;
+        FloatFilter_Init();
         ack(cmd);
         break;
 
     /* ---- 0x35  Set data format ---- */
     case RS485_CMD_SET_FORMAT_N:
         g_sys.data_format = 2;
+        FloatFilter_Init();
         ack(cmd);
         break;
 

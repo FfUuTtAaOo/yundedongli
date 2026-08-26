@@ -43,36 +43,64 @@ int32_t LHA7668_Platform_ReadWrite(uint8_t *txdata, uint8_t *rxdata, const uint1
     return 0;
 }
 
-/* 返回 0=读取成功(*out 为最新转换值)；非 0=转换超时/SPI 异常(*out 不更新，
-   调用方应保留该通道上一次有效值，避免共用同一个 ctx 导致通道间数据错位) */
-int32_t int_adcData(uint32_t *out)
+/* 单颗 LHA7668 三通道(CH0/CH1/CH2)依次转换结果的读取。
+ *
+ * LHA7668 为 AD7124 兼容芯片，单次模式 + 多通道使能时，
+ * 写一次 MODE 即触发 CH0→CH1→CH2 整个序列，每次读 DATA 自动推进下一通道。
+ * 因此这里只 Start 一次，连续读 3 次即可取回三个通道。
+ *
+ * 关键点：
+ *  1) STATUS.RDY 位：1=转换中，0=数据就绪(DOUT/RDY 低有效)。
+ *     必须等 RDY==0 才能读数据，循环条件为 (RDY==SET) 时继续等。
+ *  2) 每包数据用状态字节的 CH_ACTIVE(bit[3:0]) 校验归属通道，按通道归位，
+ *     而非按读取顺序假设——彻底杜绝 FX/FY/FZ 相互错位。
+ *
+ * 返回 0=三通道全部成功；非 0=超时/序列异常(输出不更新) */
+static int32_t int_adcData_3ch_core(lhl_lha7668_ctx_t *ctx,
+                                    uint32_t *out0, uint32_t *out1, uint32_t *out2)
 {
-    uint32_t wait = LHA7668_RDY_WAIT_MAX;
-    LHL_LHA7668_Start(&lha7668_ctx, LHA7668_MODE_SINGLE_SHOT);
-    while ((LHL_LHA7668_Get_Flag(&lha7668_ctx, LHA7668_STATUS_RDY_FLAG) == LHA7668_SET) && (--wait));
-    if (!wait) {   /* 转换未完成/SPI 异常，不更新 *out */
-        return -1;
+    uint32_t *out[3] = { out0, out1, out2 };
+    uint8_t   got    = 0;                 /* 已成功收集的通道位图 */
+    uint8_t   ch;
+    uint32_t  wait;
+    uint8_t   round;
+
+    LHL_LHA7668_Start(ctx, LHA7668_MODE_SINGLE_SHOT);   /* 一次触发 CH0→CH1→CH2 序列 */
+
+    /* 循环读取：正常 3 轮集齐；最多 6 轮容错（序列偶发从非 CH0 起步时多读几包） */
+    for (round = 0; round < 6; round++) {
+        wait = LHA7668_RDY_WAIT_MAX;
+        /* 等本次转换完成：RDY 由 1(转换中) 变 0(数据就绪) */
+        while ((LHL_LHA7668_Get_Flag(ctx, LHA7668_STATUS_RDY_FLAG) == LHA7668_SET) && (--wait));
+        if (!wait) {
+            return -1;                    /* 转换超时/SPI 异常 */
+        }
+        LHL_LHA7668_Get_Data(ctx);
+
+        /* 用状态字节校验数据归属通道 */
+        ch = (uint8_t)(ctx->status & LHA7668_STATUS_CH_ACTIVE_MSK);
+        if (ch < 3 && !(got & (1U << ch))) {
+            if (out[ch]) {
+                *out[ch] = ctx->data;     /* 按通道归位，绝不串位 */
+            }
+            got |= (1U << ch);
+            if (got == 0x07U) {           /* CH0/CH1/CH2 全部集齐 */
+                return 0;
+            }
+        }
+        /* 数据不是未收集的通道(重复/序列起点偏移)：丢弃，继续读下一包 */
     }
-    LHL_LHA7668_Get_Data(&lha7668_ctx);
-    if (out) {
-        *out = lha7668_ctx.data;
-    }
-    return 0;
+    return -1;
 }
 
-int32_t int_adcData_2(uint32_t *out)
+int32_t int_adcData_3ch(uint32_t *fx, uint32_t *fy, uint32_t *fz)
 {
-    uint32_t wait = LHA7668_RDY_WAIT_MAX;
-    LHL_LHA7668_Start(&lha7668_ctx_2, LHA7668_MODE_SINGLE_SHOT);
-    while ((LHL_LHA7668_Get_Flag(&lha7668_ctx_2, LHA7668_STATUS_RDY_FLAG) == LHA7668_SET) && (--wait));
-    if (!wait) {
-        return -1;
-    }
-    LHL_LHA7668_Get_Data(&lha7668_ctx_2);
-    if (out) {
-        *out = lha7668_ctx_2.data;
-    }
-    return 0;
+    return int_adcData_3ch_core(&lha7668_ctx, fx, fy, fz);
+}
+
+int32_t int_adcData_2_3ch(uint32_t *tx, uint32_t *ty, uint32_t *tz)
+{
+    return int_adcData_3ch_core(&lha7668_ctx_2, tx, ty, tz);
 }
 
 float adcData(void)

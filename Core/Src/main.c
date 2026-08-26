@@ -21,6 +21,7 @@
 #include "dma.h"
 #include "i2c.h"
 #include "spi.h"
+#include "stm32f4xx_hal.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -247,16 +248,20 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         g_tick_ms++;
 
         if (g_tick_ms % 3 == 0) {
-            uint32_t raw;
-            /* 六个通道分别对应 FX FY FZ TX TY TZ。
-               任一通道读取失败(超时)时跳过写入，该通道保留上一次自己的有效值，
-               避免把其他通道(如 FX)的数据错填到 FY/FZ 上 */
-            if (int_adcData(&raw) == 0)   { adc_data_buff[adc_data_int_count][0] = raw; }
-            if (int_adcData(&raw) == 0)   { adc_data_buff[adc_data_int_count][1] = raw; }
-            if (int_adcData(&raw) == 0)   { adc_data_buff[adc_data_int_count][2] = raw; }
-            if (int_adcData_2(&raw) == 0) { adc_data_buff[adc_data_int_count][3] = raw; }
-            if (int_adcData_2(&raw) == 0) { adc_data_buff[adc_data_int_count][4] = raw; }
-            if (int_adcData_2(&raw) == 0) { adc_data_buff[adc_data_int_count][5] = raw; }
+            uint32_t raw[3];
+            /* ADC1 三通道 = FX/FY/FZ，ADC2 三通道 = TX/TY/TZ。
+               整组读取，任一通道超时/序列异常则整组不更新，
+               数组各通道保留自己上一次的有效值，绝不相互错位 */
+            if (int_adcData_3ch(&raw[0], &raw[1], &raw[2]) == 0) {
+                adc_data_buff[adc_data_int_count][0] = raw[0];
+                adc_data_buff[adc_data_int_count][1] = raw[1];
+                adc_data_buff[adc_data_int_count][2] = raw[2];
+            }
+            if (int_adcData_2_3ch(&raw[0], &raw[1], &raw[2]) == 0) {
+                adc_data_buff[adc_data_int_count][3] = raw[0];
+                adc_data_buff[adc_data_int_count][4] = raw[1];
+                adc_data_buff[adc_data_int_count][5] = raw[2];
+            }
             adc_data_int_count++;
             if (adc_data_int_count >= 64) {
                 adc_data_int_count = 0;
@@ -363,8 +368,6 @@ int main(void)
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
 
-    flash_load_all();
-
     calib_init();
     uart_debug("Data Transformation Layer Init OK\r\n");
     FloatFilter_Init();
@@ -391,6 +394,8 @@ int main(void)
         MainInit();
         uart_debug("EtherCAT Init OK\r\n");
     }
+
+    flash_load_all();
 
     g_sys.data_format = 2;
     HAL_TIM_Base_Start_IT(&htim2);   /* Start 1kHz timer */

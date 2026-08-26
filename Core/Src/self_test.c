@@ -267,13 +267,6 @@ static void uart_put_dec(UART_HandleTypeDef *huart, uint32_t val)
     RS485_RX;
 }
 
-static void uart_put_ip(UART_HandleTypeDef *huart, const uint8_t ip[4])
-{
-    for (int i = 0; i < 4; i++) {
-        uart_put_dec(huart, ip[i]);
-        if (i < 3) uart_puts(huart, ".");
-    }
-}
 
 static void uart_print_result(UART_HandleTypeDef *huart, const char *label, int ok)
 {

@@ -77,8 +77,8 @@ void uart_debug(const char *msg);
 #define IRQ_EXTI_IRQn EXTI15_10_IRQn
 
 /* USER CODE BEGIN Private defines */
-#define RS485_TX    { HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_SET); HAL_Delay(10); }
-#define RS485_RX    { HAL_Delay(10); HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_RESET); }
+#define RS485_TX    { HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_SET); HAL_Delay(3); }
+#define RS485_RX    { HAL_Delay(3); HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_RESET); }
 
 typedef union {
     float f32;
