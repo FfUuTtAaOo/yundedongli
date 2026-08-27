@@ -20,7 +20,7 @@ int32_t LHA7668_Platform_ReadWrite(uint8_t *txdata, uint8_t *rxdata, const uint1
 int32_t int_adcData_3ch(uint32_t *fx, uint32_t *fy, uint32_t *fz);
 int32_t int_adcData_2_3ch(uint32_t *tx, uint32_t *ty, uint32_t *tz);
 float adcData(void);
-void lha7668_init(uint8_t rate);
+uint8_t lha7668_init(uint8_t rate);  /* 返回 0=OK，非 0=ADC 配置失败 */
 
 
 #ifdef __cplusplus

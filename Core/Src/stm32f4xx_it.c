@@ -52,7 +52,19 @@
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+static void dbg_hex32(uint32_t v)
+{
+    char buf[12];
+    const char hex[] = "0123456789ABCDEF";
+    buf[0] = '0';
+    buf[1] = 'x';
+    for (int i = 0; i < 8; i++) {
+        buf[2 + i] = hex[(v >> (28 - 4 * i)) & 0xF];
+    }
+    buf[10] = ' ';
+    buf[11] = '\0';
+    uart_debug(buf);
+}
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -87,7 +99,16 @@ void NMI_Handler(void)
 void HardFault_Handler(void)
 {
   /* USER CODE BEGIN HardFault_IRQn 0 */
+    uart_debug("HARDFAULT!\r\nCFSR=");
+    dbg_hex32(SCB->CFSR);
+    uart_debug("HFSR=");
+    dbg_hex32(SCB->HFSR);
+    uart_debug("BFAR=");
+    dbg_hex32(SCB->BFAR);
+    uart_debug("\r\nRESET in 3s\r\n");
 
+    HAL_Delay(3000);
+    NVIC_SystemReset();
   /* USER CODE END HardFault_IRQn 0 */
   while (1)
   {

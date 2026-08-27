@@ -376,7 +376,12 @@ int main(void)
     HAL_GPIO_WritePin(GPIOA, SPI1_CS1_Pin, GPIO_PIN_SET);
     HAL_GPIO_WritePin(GPIOB, SPI1_CS2_Pin, GPIO_PIN_SET);
 
-    lha7668_init(ADC_SAMPLING_RATE_3);
+    if (lha7668_init(ADC_SAMPLING_RATE_3) != 0)
+    {
+        uart_debug("LHA7668 init FAILED, will reset & retry\r\n");
+        HAL_Delay(2000);
+        NVIC_SystemReset();
+    }
     uart_debug("LHA7668 OK\r\n");
 
     uart_debug("--- RS485 self-test ---\r\n");

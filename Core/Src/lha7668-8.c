@@ -6,6 +6,9 @@ uint8_t adc_init_count = 0;
    每次轮询约 30us（4 字节 SPI @3MHz），500 次 ≈ 15ms */
 #define LHA7668_RDY_WAIT_MAX   500
 
+/* WHO_AM_I 读取重试上限：防止 ADC 上电未就绪时 while 死循环卡死初始化 */
+#define LHA7668_ID_RETRY_MAX   20
+
 lhl_lha7668_ctx_t lha7668_ctx = { 0 };  /* LHA7668B official driver handle */
 lhl_lha7668_ctx_t lha7668_ctx_2 = { };
 
@@ -125,8 +128,10 @@ float adcData_2(void)
     return LHL_LHA7668_Get_mVoltage(lha7668_ctx_2.data, LHA7668_BIPOLAR, LHA7668_PGA_X128, 2500);
 }
 
-void lha7668_init(uint8_t rate)
+uint8_t lha7668_init(uint8_t rate)
 {
+    HAL_Delay(100);    /* 等待 LHA7668 上电稳定（内部 LDO/时钟复位完成）后再通信 */
+
     LHA7668_Platform_Init(&lha7668_ctx);
     LHL_LHA7668_Init(&lha7668_ctx);
     LHL_LHA7668_Reset(&lha7668_ctx);
@@ -137,15 +142,18 @@ void lha7668_init(uint8_t rate)
 
     uint8_t whoamI = 0xFF;
     adc_init_count = 0;
-    while (1) {
+    while (adc_init_count < LHA7668_ID_RETRY_MAX) {
         whoamI = LHL_LHA7668_Get_ID(&lha7668_ctx);
         if (whoamI == LHA7668B_8) {
             break;
-        } else {
-            adc_init_count++;
-            uart_debug("ADC_1 Init Failed\r\n");
-            original_send(&adc_init_count, 1);
         }
+        adc_init_count++;
+        uart_debug("ADC_1 Init Failed\r\n");
+        original_send(&adc_init_count, 1);
+    }
+    if (whoamI != LHA7668B_8) {
+        uart_debug("ADC_1 init FAILED, abort init\r\n");
+        return 1;
     }
     LHL_LHA7668_Stop(&lha7668_ctx);
 
@@ -190,15 +198,18 @@ void lha7668_init(uint8_t rate)
 
     whoamI = 0xFF;
     adc_init_count = 0;
-    while (1) {
+    while (adc_init_count < LHA7668_ID_RETRY_MAX) {
         whoamI = LHL_LHA7668_Get_ID(&lha7668_ctx_2);
         if (whoamI == LHA7668B_8) {
             break;
-        } else {
-            adc_init_count++;
-            uart_debug("ADC_2 Init Failed\r\n");
-            original_send(&adc_init_count, 1);
         }
+        adc_init_count++;
+        uart_debug("ADC_2 Init Failed\r\n");
+        original_send(&adc_init_count, 1);
+    }
+    if (whoamI != LHA7668B_8) {
+        uart_debug("ADC_2 init FAILED, abort init\r\n");
+        return 1;
     }
     LHL_LHA7668_Stop(&lha7668_ctx_2);
     lha7668_ctx_2.CHANNEL.ENABLE = LHA7668_ENABLE;
@@ -237,4 +248,5 @@ void lha7668_init(uint8_t rate)
     LHL_LHA7668_Set_ADC(&lha7668_ctx_2);
 
     uart_debug("ADC_2 completed init OK\r\n");
+    return 0;
 }
